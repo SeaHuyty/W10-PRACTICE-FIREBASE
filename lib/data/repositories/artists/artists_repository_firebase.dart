@@ -6,20 +6,30 @@ import 'package:assignment/model/artists/artist.dart';
 import 'package:http/http.dart' as http;
 
 class ArtistsRepositoryFirebase extends ArtistsRepository {
-  final Uri artistsUri = Uri.https('week-nine-database-default-rtdb.asia-southeast1.firebasedatabase.app', '/artist/artists.json');
+  final Uri artistsUri = Uri.https(
+    'week-nine-database-default-rtdb.asia-southeast1.firebasedatabase.app',
+    '/artist/artists.json',
+  );
+  List<Artist>? _cachedArtists;
 
   @override
   Future<List<Artist>> fetchArtists() async {
+    if (_cachedArtists != null) {
+      return _cachedArtists!;
+    }
+
     final http.Response response = await http.get(artistsUri);
 
     if (response.statusCode == 200) {
       if (response.body == 'null') {
-        return [];
+        _cachedArtists = [];
+        return _cachedArtists!;
       }
 
-      final Map<String, dynamic> artistsJson = json.decode(response.body) as Map<String, dynamic>;
+      final Map<String, dynamic> artistsJson =
+          json.decode(response.body) as Map<String, dynamic>;
 
-      return artistsJson.entries.map((entry) {
+      final artists = artistsJson.entries.map((entry) {
         final Map<String, dynamic> artistMap = Map<String, dynamic>.from(
           entry.value as Map,
         );
@@ -28,6 +38,9 @@ class ArtistsRepositoryFirebase extends ArtistsRepository {
 
         return ArtistDto.fromJson(artistMap);
       }).toList();
+
+      _cachedArtists = artists;
+      return artists;
     } else {
       throw Exception('Failed to load');
     }

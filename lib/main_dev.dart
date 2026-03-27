@@ -1,7 +1,7 @@
 import 'package:assignment/data/repositories/artists/artists_repository.dart';
 import 'package:assignment/data/repositories/artists/artists_repository_firebase.dart';
 import 'package:provider/provider.dart';
- 
+
 import 'data/repositories/songs/song_repository_firebase.dart';
 import 'main_common.dart';
 import 'data/repositories/settings/app_settings_repository_mock.dart';
@@ -12,13 +12,16 @@ import 'ui/states/settings_state.dart';
 /// Configure provider dependencies for dev environment
 List<InheritedProvider> get devProviders {
   final appSettingsRepository = AppSettingsRepositoryMock();
+  final artistsRepository = ArtistsRepositoryFirebase();
 
   return [
- 
     // 1 - Inject the song repository
-    Provider<SongRepository>(create: (_) => SongRepositoryFirebase()),
+    Provider<SongRepository>(
+      create: (_) =>
+          SongRepositoryFirebase(artistsRepository: artistsRepository),
+    ),
 
-    Provider<ArtistsRepository>(create: (_) => ArtistsRepositoryFirebase()),
+    Provider<ArtistsRepository>(create: (_) => artistsRepository),
 
     // 2 - Inject the player state
     ChangeNotifierProvider<PlayerState>(create: (_) => PlayerState()),

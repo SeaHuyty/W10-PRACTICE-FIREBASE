@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:assignment/data/dtos/artist_dto.dart';
+import 'package:assignment/data/repositories/artists/artists_repository.dart';
 import 'package:assignment/data/repositories/artists/artists_repository_firebase.dart';
 import 'package:assignment/model/artists/artist.dart';
 import 'package:assignment/model/song_with_artist/song_with_artist.dart';
@@ -11,24 +11,37 @@ import '../../dtos/song_dto.dart';
 import 'song_repository.dart';
 
 class SongRepositoryFirebase extends SongRepository {
+  final ArtistsRepository artistsRepository;
+
+  SongRepositoryFirebase({ArtistsRepository? artistsRepository})
+    : artistsRepository = artistsRepository ?? ArtistsRepositoryFirebase();
+
   final Uri songsUri = Uri.https(
     'week-nine-database-default-rtdb.asia-southeast1.firebasedatabase.app',
     '/artist/songs.json',
   );
 
+  List<Song>? _cachedSong;
+  List<SongWithArtist>? _cachedSongWithArtist;
+
   @override
   Future<List<Song>> fetchSongs() async {
+    if (_cachedSong != null) {
+      return _cachedSong!;
+    }
+
     final http.Response response = await http.get(songsUri);
 
     if (response.statusCode == 200) {
       if (response.body == 'null') {
-        return [];
+        _cachedSong = [];
+        return _cachedSong!;
       }
 
       final Map<String, dynamic> songsJson =
           json.decode(response.body) as Map<String, dynamic>;
 
-      return songsJson.entries.map((entry) {
+      final songs = songsJson.entries.map((entry) {
         final Map<String, dynamic> songMap = Map<String, dynamic>.from(
           entry.value as Map,
         );
@@ -37,6 +50,10 @@ class SongRepositoryFirebase extends SongRepository {
 
         return SongDto.fromJson(songMap);
       }).toList();
+
+      _cachedSong = songs;
+
+      return songs;
     } else {
       throw Exception('Failed to load posts');
     }
@@ -47,40 +64,33 @@ class SongRepositoryFirebase extends SongRepository {
 
   @override
   Future<List<SongWithArtist>> joinArtist() async {
-    final http.Response songResponse = await http.get(songsUri);
-
-    ArtistsRepositoryFirebase artistRepo = ArtistsRepositoryFirebase();
-    final http.Response artistResponse = await http.get(artistRepo.artistsUri);
-
-    if (songResponse.statusCode != 200 || artistResponse.statusCode != 200) {
-      throw Exception('Failed to load songs/artists');
+    if (_cachedSongWithArtist != null) {
+      return _cachedSongWithArtist!;
     }
 
-    if (songResponse.body == 'null' || artistResponse.body == 'null') {
+    final songs = await fetchSongs();
+    final artists = await artistsRepository.fetchArtists();
+
+    if (songs.isEmpty || artists.isEmpty) {
+      _cachedSongWithArtist = [];
       return [];
     }
 
-    final Map<String, dynamic> songsJson =
-        json.decode(songResponse.body) as Map<String, dynamic>;
+    final Map<String, Artist> artistById = {
+      for (final artist in artists) artist.id: artist,
+    };
 
-    final Map<String, dynamic> artistsJson =
-        json.decode(artistResponse.body) as Map<String, dynamic>;
+    final songsWithArtist = songs
+        .where((song) => artistById.containsKey(song.artist))
+        .map((song) {
+          final artist = artistById[song.artist]!;
+          return SongWithArtist(song: song, artist: artist);
+        })
+        .toList();
 
-    final Map<String, Artist> artistById = artistsJson.map((id, value) {
-      final artistMap = Map<String, dynamic>.from(value as Map);
-      artistMap[ArtistDto.idKey] = id;
-      return MapEntry(id, ArtistDto.fromJson(artistMap));
-    });
+    _cachedSongWithArtist = songsWithArtist;
 
-    return songsJson.entries.map((entry) {
-      final songMap = Map<String, dynamic>.from(entry.value as Map);
-      songMap[SongDto.idKey] = entry.key;
-
-      final song = SongDto.fromJson(songMap);
-      final artist = artistById[song.artist];
-
-      return SongWithArtist(song: song, artist: artist!);
-    }).toList();
+    return songsWithArtist;
   }
 
   @override
@@ -96,6 +106,43 @@ class SongRepositoryFirebase extends SongRepository {
     );
 
     if (response.statusCode == 200) {
+      if (_cachedSong != null) {
+        _cachedSong = _cachedSong!
+            .map(
+              (song) => song.id == songId
+                  ? Song(
+                      id: song.id,
+                      title: song.title,
+                      artist: song.artist,
+                      duration: song.duration,
+                      image: song.image,
+                      like: song.like + 1,
+                    )
+                  : song,
+            )
+            .toList();
+      }
+
+      if (_cachedSongWithArtist != null) {
+        _cachedSongWithArtist = _cachedSongWithArtist!
+            .map(
+              (item) => item.song.id == songId
+                  ? SongWithArtist(
+                      artist: item.artist,
+                      song: Song(
+                        id: item.song.id,
+                        title: item.song.title,
+                        artist: item.song.artist,
+                        duration: item.song.duration,
+                        image: item.song.image,
+                        like: item.song.like + 1,
+                      ),
+                    )
+                  : item,
+            )
+            .toList();
+      }
+
       return true;
     }
     return false;
