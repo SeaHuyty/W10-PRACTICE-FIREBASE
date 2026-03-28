@@ -12,7 +12,9 @@ class SongRepositoryMock implements SongRepository {
       title: 'Mock Song 1',
       artist: 'Mock Artist',
       duration: const Duration(minutes: 2, seconds: 50),
-      image: Uri.parse('https://images.unsplash.com/photo-1470225620780-dba8ba36b745'),
+      image: Uri.parse(
+        'https://images.unsplash.com/photo-1470225620780-dba8ba36b745',
+      ),
       like: 0,
     ),
     Song(
@@ -20,7 +22,9 @@ class SongRepositoryMock implements SongRepository {
       title: 'Mock Song 2',
       artist: 'Mock Artist',
       duration: const Duration(minutes: 3, seconds: 20),
-      image: Uri.parse('https://images.unsplash.com/photo-1470225620780-dba8ba36b745'),
+      image: Uri.parse(
+        'https://images.unsplash.com/photo-1470225620780-dba8ba36b745',
+      ),
       like: 0,
     ),
     Song(
@@ -28,7 +32,9 @@ class SongRepositoryMock implements SongRepository {
       title: 'Mock Song 3',
       artist: 'Mock Artist',
       duration: const Duration(minutes: 3, seconds: 20),
-      image: Uri.parse('https://images.unsplash.com/photo-1470225620780-dba8ba36b745'),
+      image: Uri.parse(
+        'https://images.unsplash.com/photo-1470225620780-dba8ba36b745',
+      ),
       like: 0,
     ),
     Song(
@@ -36,7 +42,9 @@ class SongRepositoryMock implements SongRepository {
       title: 'Mock Song 4',
       artist: 'Mock Artist',
       duration: const Duration(minutes: 3, seconds: 20),
-      image: Uri.parse('https://images.unsplash.com/photo-1470225620780-dba8ba36b745'),
+      image: Uri.parse(
+        'https://images.unsplash.com/photo-1470225620780-dba8ba36b745',
+      ),
       like: 0,
     ),
     Song(
@@ -44,7 +52,9 @@ class SongRepositoryMock implements SongRepository {
       title: 'Mock Song 5',
       artist: 'Mock Artist',
       duration: const Duration(minutes: 3, seconds: 20),
-      image: Uri.parse('https://images.unsplash.com/photo-1470225620780-dba8ba36b745'),
+      image: Uri.parse(
+        'https://images.unsplash.com/photo-1470225620780-dba8ba36b745',
+      ),
       like: 0,
     ),
   ];
@@ -73,6 +83,16 @@ class SongRepositoryMock implements SongRepository {
 
   @override
   Future<List<SongWithArtist>> joinArtist() {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<SongWithArtist>> fetchSongsByArtistId(String artistId) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<bool> addComment(String artistId, String comment) {
     throw UnimplementedError();
   }
 }

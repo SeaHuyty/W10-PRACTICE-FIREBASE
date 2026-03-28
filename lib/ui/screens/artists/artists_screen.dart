@@ -1,4 +1,5 @@
 import 'package:assignment/data/repositories/artists/artists_repository.dart';
+import 'package:assignment/data/repositories/songs/song_repository.dart';
 import 'package:assignment/ui/screens/artists/view_model/artists_viewmodel.dart';
 import 'package:assignment/ui/screens/artists/widgets/artists_content.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ class ArtistsScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => ArtistsViewmodel(
         artistsRepository: context.read<ArtistsRepository>(),
+        songRepository: context.read<SongRepository>(),
       ),
       child: ArtistsContent(),
     );

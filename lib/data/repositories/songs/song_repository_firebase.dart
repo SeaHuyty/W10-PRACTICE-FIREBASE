@@ -94,6 +94,23 @@ class SongRepositoryFirebase extends SongRepository {
   }
 
   @override
+  Future<List<SongWithArtist>> fetchSongsByArtistId(String artistId) async {
+    final allSongs = await joinArtist();
+    return allSongs.where((song) => song.artist.id == artistId).toList();
+  }
+
+  @override
+  Future<bool> addComment(String artistId, String comment) async {
+    final uri = Uri.https(
+      'week-nine-database-default-rtdb.asia-southeast1.firebasedatabase.app',
+      '/artist/artists/$artistId/comments.json',
+    );
+
+    final response = await http.post(uri, body: json.encode(comment));
+    return response.statusCode == 200;
+  }
+
+  @override
   Future<bool> likeSong(String songId, int currentLike) async {
     final Uri songUri = Uri.https(
       'week-nine-database-default-rtdb.asia-southeast1.firebasedatabase.app',
